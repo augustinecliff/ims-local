@@ -1,0 +1,25 @@
+# Replace @fe-dev-1 and @fe-dev-2 with real GitHub usernames
+
+# Default — both reviewers
+*                               @fe-dev-1 @fe-dev-2
+
+# Core infrastructure
+/src/core/                      @fe-dev-1
+/src/mocks/                     @fe-dev-1
+/src/types/                     @fe-dev-1
+/src/app/                       @fe-dev-1
+
+# Modules — FE-1 owned
+/src/modules/foundation/          @fe-dev-1
+/src/modules/portfolio/         @fe-dev-1
+/src/modules/risk/              @fe-dev-1
+/src/modules/admin/             @fe-dev-1
+/src/modules/personalization/   @fe-dev-1
+
+# Modules — FE-2 owned
+/src/modules/research/          @fe-dev-2
+/src/modules/investment/        @fe-dev-2
+/src/modules/engagement/        @fe-dev-2
+
+# Documentation
+/docs/                          @fe-dev-1 @fe-dev-2
