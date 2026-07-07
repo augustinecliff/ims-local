@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const INSTRUMENTS = [
   'Safaricom',
@@ -65,30 +65,42 @@ function spawnTrade(lastPrices: Map<string, number>): LiveTrade {
   }
 }
 
-function seedTrades(prices: Map<string, number>, count = 3): LiveTrade[] {
+function buildPriceMap(trades: LiveTrade[]): Map<string, number> {
+  const prices = new Map<string, number>(Object.entries(BASE_PRICES))
+  for (const trade of trades) {
+    prices.set(trade.instrument, trade.price)
+  }
+  return prices
+}
+
+function seedTrades(count: number): LiveTrade[] {
+  const prices = new Map<string, number>(Object.entries(BASE_PRICES))
   return Array.from({ length: count }, () => spawnTrade(prices))
 }
 
-export function useLiveTrades(active: boolean, maxItems = 12, intervalMs = 320) {
-  const [trades, setTrades] = useState<LiveTrade[]>(() =>
-    seedTrades(new Map<string, number>(Object.entries(BASE_PRICES))),
-  )
+/** Always-on trade feed — independent of preview scene pause */
+export function useLiveTrades(maxItems = 12, intervalMs = 320) {
+  const maxItemsRef = useRef(maxItems)
 
   useEffect(() => {
-    if (!active) return
+    maxItemsRef.current = maxItems
+  }, [maxItems])
 
-    const id = setInterval(() => {
+  const [trades, setTrades] = useState<LiveTrade[]>(() => seedTrades(Math.min(maxItems, 6)))
+
+  useEffect(() => {
+    const tick = () => {
       setTrades((prev) => {
-        const prices = new Map<string, number>(Object.entries(BASE_PRICES))
-        for (const trade of prev) {
-          prices.set(trade.instrument, trade.price)
-        }
-        return [spawnTrade(prices), ...prev].slice(0, maxItems)
+        const cap = maxItemsRef.current
+        const prices = buildPriceMap(prev)
+        const next = [spawnTrade(prices), ...prev].slice(0, cap)
+        return next.length > 0 ? next : seedTrades(Math.min(cap, 4))
       })
-    }, intervalMs)
+    }
 
+    const id = setInterval(tick, intervalMs)
     return () => clearInterval(id)
-  }, [active, maxItems, intervalMs])
+  }, [intervalMs])
 
-  return trades
+  return trades.slice(0, maxItems)
 }

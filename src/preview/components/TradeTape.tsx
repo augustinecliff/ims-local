@@ -3,43 +3,54 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { layoutSpring, tradeRowTransition } from '../animations/variants'
 import { useLiveTrades, type LiveTrade } from '../hooks/useLiveTrades'
 import { usePreviewBreakpoint } from '../hooks/usePreviewBreakpoint'
-import { usePreview } from '../context/usePreview'
 
-function TradeRow({ trade }: { trade: LiveTrade }) {
+function TradeRowContent({ trade }: { trade: LiveTrade }) {
   const up = trade.delta >= 0
 
   return (
-    <motion.div
-      className="trade-tape__row"
-      layout
-      initial={tradeRowTransition.initial}
-      animate={tradeRowTransition.animate}
-      exit={tradeRowTransition.exit}
-      transition={layoutSpring}
-    >
+    <>
       <span className="trade-tape__time">{trade.time}</span>
       <span className={`trade-tape__side trade-tape__side--${trade.side}`}>
         {trade.side}
       </span>
       <span className="trade-tape__instrument">{trade.instrument}</span>
       <span className="trade-tape__qty">{trade.qty.toLocaleString()}</span>
-      <motion.span
-        className={`trade-tape__price trade-tape__price--${up ? 'up' : 'down'}`}
-        animate={{ scale: 1 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-      >
+      <span className={`trade-tape__price trade-tape__price--${up ? 'up' : 'down'}`}>
         {trade.price.toFixed(2)}
         <span className="trade-tape__arrow">{up ? ' ▲' : ' ▼'}</span>
-      </motion.span>
+      </span>
+    </>
+  )
+}
+
+function TradeRowAnimated({ trade }: { trade: LiveTrade }) {
+  return (
+    <motion.div
+      className="trade-tape__row"
+      layout="position"
+      initial={tradeRowTransition.initial}
+      animate={tradeRowTransition.animate}
+      exit={tradeRowTransition.exit}
+      transition={layoutSpring}
+    >
+      <TradeRowContent trade={trade} />
     </motion.div>
   )
 }
 
+function TradeRowStatic({ trade }: { trade: LiveTrade }) {
+  return (
+    <div className="trade-tape__row trade-tape__row--static">
+      <TradeRowContent trade={trade} />
+    </div>
+  )
+}
+
 export function TradeTape() {
-  const { state } = usePreview()
   const breakpoint = usePreviewBreakpoint()
-  const maxItems = breakpoint === 'sm' ? 7 : breakpoint === 'md' ? 9 : 14
-  const trades = useLiveTrades(!state.isPaused, maxItems, 480)
+  const isMobile = breakpoint !== 'lg'
+  const maxItems = breakpoint === 'sm' ? 6 : breakpoint === 'md' ? 8 : 12
+  const trades = useLiveTrades(maxItems, isMobile ? 560 : 480)
 
   return (
     <div className="trade-tape">
@@ -55,13 +66,21 @@ export function TradeTape() {
         <span>Qty</span>
         <span>Price</span>
       </div>
-      <motion.div className="trade-tape__feed" layout>
-        <AnimatePresence initial={false} mode="popLayout">
+      {isMobile ? (
+        <div className="trade-tape__feed trade-tape__feed--static">
           {trades.map((t) => (
-            <TradeRow key={t.id} trade={t} />
+            <TradeRowStatic key={t.id} trade={t} />
           ))}
-        </AnimatePresence>
-      </motion.div>
+        </div>
+      ) : (
+        <motion.div className="trade-tape__feed" layout="position">
+          <AnimatePresence initial={false}>
+            {trades.map((t) => (
+              <TradeRowAnimated key={t.id} trade={t} />
+            ))}
+          </AnimatePresence>
+        </motion.div>
+      )}
     </div>
   )
 }
