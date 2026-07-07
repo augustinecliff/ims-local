@@ -1,7 +1,7 @@
 import type { ChatMessage, PreviewAction, PreviewState, TimelineEvent } from './types'
 
-/** Game-trailer montage — ~60s loop (base timeline × pace). Pace 6 = 4× slower than prior 1.5. */
-export const TIMELINE_PACE = 6
+/** Game-trailer montage — ~80s loop (base timeline × pace) */
+export const TIMELINE_PACE = 8
 export const LOOP_DURATION_MS = 10_000 * TIMELINE_PACE
 export const PROGRESS_TICK_MS = 50
 export const MAX_FLYOUTS = 14
@@ -12,7 +12,6 @@ export function createInitialPreviewState(): PreviewState {
     activeNav: 'portfolio',
     fundId: 'mmf',
     loopProgress: 0,
-    isPaused: false,
     flashTitle: null,
     shake: false,
     flyouts: [],

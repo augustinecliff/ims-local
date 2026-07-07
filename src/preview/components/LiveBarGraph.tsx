@@ -2,7 +2,6 @@ import { motion } from 'framer-motion'
 
 import { fluidSpringSoft } from '../animations/variants'
 import { useLiveBars } from '../hooks/useLiveBars'
-import { usePreview } from '../context/usePreview'
 
 const BAR_GRADIENTS = [
   'linear-gradient(180deg, #22d3ee, #3b82f6)',
@@ -25,8 +24,7 @@ export function LiveBarGraph({
   variant = 'default',
   live = true,
 }: LiveBarGraphProps) {
-  const { state } = usePreview()
-  const heights = useLiveBars(barCount, live && !state.isPaused)
+  const heights = useLiveBars(barCount, live)
 
   return (
     <motion.div

@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useEffect,
   useMemo,
   useReducer,
@@ -70,17 +69,20 @@ function getSpeedMultiplier(): number {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 1
 }
 
-export function PreviewProvider({ children }: { children: ReactNode }) {
+interface PreviewProviderProps {
+  children: ReactNode
+  /** False during intro splash; timeline runs only when true */
+  playing?: boolean
+}
+
+export function PreviewProvider({ children, playing = true }: PreviewProviderProps) {
   const [state, dispatch] = useReducer(previewReducer, undefined, createInitialPreviewState)
   const loopStartRef = useRef(0)
-  const isPausedRef = useRef(false)
   const speed = getSpeedMultiplier()
 
   useEffect(() => {
-    isPausedRef.current = state.isPaused
-  }, [state.isPaused])
+    if (!playing) return
 
-  useEffect(() => {
     let cancelled = false
     const timeoutIds: ReturnType<typeof setTimeout>[] = []
 
@@ -102,7 +104,7 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
       for (const event of PREVIEW_TIMELINE) {
         const delay = (event.at * TIMELINE_PACE) / speed
         const id = setTimeout(() => {
-          if (!cancelled && !isPausedRef.current) {
+          if (!cancelled) {
             dispatch(event.action)
           }
         }, delay)
@@ -121,10 +123,10 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
       cancelled = true
       clearTimeouts()
     }
-  }, [speed])
+  }, [playing, speed])
 
   useEffect(() => {
-    if (state.isPaused) return
+    if (!playing) return
 
     const id = setInterval(() => {
       const elapsed = performance.now() - loopStartRef.current
@@ -133,17 +135,9 @@ export function PreviewProvider({ children }: { children: ReactNode }) {
     }, PROGRESS_TICK_MS)
 
     return () => clearInterval(id)
-  }, [speed, state.isPaused])
+  }, [playing, speed])
 
-  const setPaused = useCallback((paused: boolean) => {
-    isPausedRef.current = paused
-    dispatch({ type: 'PATCH', patch: { isPaused: paused } })
-  }, [])
-
-  const value = useMemo(
-    () => ({ state, dispatch, setPaused }),
-    [state, setPaused],
-  )
+  const value = useMemo(() => ({ state, dispatch }), [state])
 
   return <PreviewContext.Provider value={value}>{children}</PreviewContext.Provider>
 }

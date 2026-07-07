@@ -89,7 +89,6 @@ export interface PreviewState {
   activeNav: PreviewNavId
   fundId: FundId
   loopProgress: number
-  isPaused: boolean
   flashTitle: string | null
   shake: boolean
   flyouts: Flyout[]

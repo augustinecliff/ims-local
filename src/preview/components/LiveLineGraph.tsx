@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion'
 
 import { fluidSpringSoft } from '../animations/variants'
-import { usePreview } from '../context/usePreview'
 import {
   pointsToAreaPath,
   pointsToSvgPath,
@@ -33,8 +32,7 @@ export function LiveLineGraph({
   color = 'cyan',
   volatility = 10,
 }: LiveLineGraphProps) {
-  const { state } = usePreview()
-  const points = useLiveLineSeries(pointCount, !state.isPaused, 400, volatility)
+  const points = useLiveLineSeries(pointCount, true, 400, volatility)
   const palette = COLORS[color]
   const linePath = pointsToSvgPath(points, width, height)
   const areaPath = pointsToAreaPath(points, width, height)
